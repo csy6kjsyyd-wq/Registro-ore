@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🔎</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root {
   --bg: #080d1a;
@@ -54,14 +56,14 @@ table { width: 100%; border-collapse: collapse; min-width: 500px; }
 th { color: var(--blue); font-size: 0.7rem; padding: 12px; text-align: left; border-bottom: 1px solid var(--card-border); text-transform: uppercase; letter-spacing: .12em; }
 td { padding: 14px; border-top: 1px solid rgba(255,255,255,.05); font-size: 0.9rem; color: var(--text); }
 
-.print-area { display:none; }
-@media print {
-  body > *:not(.print-area) { display: none !important; }
-  .print-area { display: block !important; }
-  .print-area table { width:100%; border-collapse:collapse; }
-  .print-area th, .print-area td { border:1px solid #999; padding:8px; font-size:12px; color:#000; }
-  .print-area h1 { font-size:16px; margin-bottom:12px; color:#000; }
+.print-area {
+  position:absolute; left:-9999px; top:0; width:700px;
+  background:#fff; padding:30px; font-family:sans-serif;
 }
+.print-area table { width:100%; border-collapse:collapse; margin-top:10px; }
+.print-area th, .print-area td { border:1px solid #999; padding:8px; font-size:13px; color:#000; text-align:left; }
+.print-area th { background:#eee; }
+.print-area h1 { font-size:18px; margin-bottom:4px; color:#000; }
 </style>
 </head>
 <body>
@@ -104,7 +106,7 @@ td { padding: 14px; border-top: 1px solid rgba(255,255,255,.05); font-size: 0.9r
   <div class="header">
     <div class="icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
     <div><h1 style="margin:0; font-size:1.2rem;" id="titoloDati">Le mie ore</h1><p style="margin:0; color:var(--muted); font-size:0.8rem;">Schede giornaliere</p></div>
-    <button id="stampa">Stampa</button>
+    <button id="stampa">Scarica PDF</button>
     <button id="logout">Esci</button>
   </div>
 
@@ -244,11 +246,46 @@ $visMese.onchange = () => {
   $tabResults.innerHTML = costruisciTabella();
 };
 
-$stampa.addEventListener('click', () => {
+$stampa.addEventListener('click', async () => {
   const html = costruisciTabella();
   if (!html) { alert('Seleziona anno e mese'); return; }
-  $printArea.innerHTML = `<h1>Riepilogo ore: ${nomeCorrente} — ${MESI[parseInt($visMese.value,10)-1]} ${$visAnno.value}</h1>${html}`;
-  window.print();
+
+  const titolo = `Riepilogo ore: ${nomeCorrente} — ${MESI[parseInt($visMese.value,10)-1]} ${$visAnno.value}`;
+  $printArea.innerHTML = `<h1>${titolo}</h1>${html}`;
+
+  const testoOriginale = $stampa.textContent;
+  $stampa.disabled = true;
+  $stampa.textContent = 'Generazione PDF...';
+
+  try {
+    const canvas = await html2canvas($printArea, { scale: 2, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const nomeFile = `Ore_${nomeCorrente.replace(/\s+/g,'_')}_${MESI[parseInt($visMese.value,10)-1]}_${$visAnno.value}.pdf`;
+    pdf.save(nomeFile);
+  } catch (e) {
+    alert('Errore nella generazione del PDF: ' + e.message);
+  } finally {
+    $stampa.disabled = false;
+    $stampa.textContent = testoOriginale;
+  }
 });
 
 $logout.addEventListener('click', () => {
