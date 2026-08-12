@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<title>Registro Ore Lavorate</title>
+		<style>
+			* { box-sizing: border-box; margin: 0; padding: 0; }
+
+			body {
+			  font-family: 'Segoe UI', Arial, sans-serif;
+			  background: #eef2f7;
+			  min-height: 100vh;
+			  display: flex;
+			  align-items: flex-start;
+			  justify-content: center;
+			  padding: 24px 16px;
+			  touch-action: manipulation;
+			}
+
+			.card {
+			  background: #ffffff;
+			  width: 100%;
+			  max-width: 420px;
+			  border-radius: 16px;
+			  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+			  overflow: hidden;
+			}
+
+			.card-header {
+			  background: #1a3a5c;
+			  padding: 28px 28px 22px;
+			}
+
+			.card-header .label {
+			  font-size: 11px;
+			  font-weight: 700;
+			  letter-spacing: 2px;
+			  text-transform: uppercase;
+			  color: #7eb8f7;
+			  margin-bottom: 6px;
+			}
+
+			.card-header h1 {
+			  font-size: 22px;
+			  font-weight: 700;
+			  color: #ffffff;
+			  line-height: 1.2;
+			}
+
+			.card-body { padding: 28px; }
+
+			.field { margin-bottom: 20px; }
+
+			.field label {
+			  display: block;
+			  font-size: 12px;
+			  font-weight: 700;
+			  letter-spacing: 0.8px;
+			  text-transform: uppercase;
+			  color: #5a6a7e;
+			  margin-bottom: 7px;
+			}
+
+			.field input,
+			.field select,
+			.field textarea {
+			  width: 100%;
+			  padding: 13px 14px;
+			  font-size: 15px;
+			  font-family: inherit;
+			  color: #1a2a3a;
+			  background: #f4f7fb;
+			  border: 1.5px solid #dce4ef;
+			  border-radius: 9px;
+			  outline: none;
+			  transition: border-color 0.18s, box-shadow 0.18s;
+			  -webkit-appearance: none;
+			  appearance: none;
+			}
+
+			.field input:focus,
+			.field select:focus,
+			.field textarea:focus {
+			  border-color: #1a3a5c;
+			  box-shadow: 0 0 0 3px rgba(26,58,92,0.10);
+			  background: #ffffff;
+			}
+
+			.field input::placeholder,
+			.field textarea::placeholder { color: #aab4c2; }
+
+			.field select {
+			  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235a6a7e' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+			  background-repeat: no-repeat;
+			  background-position: right 14px center;
+			  background-color: #f4f7fb;
+			  cursor: pointer;
+			}
+
+			.field select:focus { background-color: #ffffff; }
+
+			.field textarea {
+			  resize: none;
+			  overflow: hidden;
+			  line-height: 1.5;
+			}
+
+			.divider {
+			  height: 1px;
+			  background: #eef2f7;
+			  margin: 4px 0 24px;
+			}
+
+			.lavoro-section {
+			  background: #f8fafd;
+			  border: 1.5px solid #dce4ef;
+			  border-radius: 12px;
+			  padding: 18px;
+			  margin-bottom: 16px;
+			  position: relative;
+			}
+
+			.lavoro-section .section-title {
+			  font-size: 11px;
+			  font-weight: 700;
+			  letter-spacing: 1.5px;
+			  text-transform: uppercase;
+			  color: #1a3a5c;
+			  margin-bottom: 14px;
+			}
+
+			.lavoro-section .btn-remove {
+			  position: absolute;
+			  top: 14px;
+			  right: 14px;
+			  background: #fee2e2;
+			  color: #dc2626;
+			  border: none;
+			  border-radius: 6px;
+			  width: 28px;
+			  height: 28px;
+			  font-size: 16px;
+			  line-height: 1;
+			  cursor: pointer;
+			  display: flex;
+			  align-items: center;
+			  justify-content: center;
+			  font-weight: 700;
+			}
+
+			.lavoro-section .field { margin-bottom: 14px; }
+			.lavoro-section .field:last-child { margin-bottom: 0; }
+
+			.btn-add {
+			  width: 100%;
+			  padding: 13px;
+			  background: #f0f6ff;
+			  color: #1a3a5c;
+			  border: 2px dashed #a0bcd8;
+			  border-radius: 12px;
+			  font-size: 15px;
+			  font-weight: 700;
+			  cursor: pointer;
+			  margin-bottom: 24px;
+			  transition: background 0.18s, border-color 0.18s;
+			}
+
+			.btn-add:active { background: #e0eeff; }
+
+			.btn-submit {
+			  width: 100%;
+			  padding: 16px;
+			  background: linear-gradient(135deg, #1a3a5c 0%, #1a6b3a 100%);
+			  color: #ffffff;
+			  border: none;
+			  border-radius: 14px;
+			  font-size: 16px;
+			  font-weight: 700;
+			  letter-spacing: 0.6px;
+			  cursor: pointer;
+			  -webkit-appearance: none;
+			  margin-top: 4px;
+			  position: relative;
+			  overflow: hidden;
+			  box-shadow: 0 4px 15px rgba(26,58,92,0.30);
+			  transition: box-shadow 0.2s, transform 0.1s;
+			}
+
+			.btn-submit:hover {
+			  box-shadow: 0 6px 20px rgba(26,58,92,0.40);
+			  transform: translateY(-1px);
+			}
+
+			.btn-submit:active {
+			  transform: scale(0.98) translateY(0);
+			  box-shadow: 0 2px 8px rgba(26,58,92,0.20);
+			}
+
+			.btn-submit:disabled { opacity: .75; cursor: default; }
+
+			.btn-submit .btn-fill {
+			  position: absolute;
+			  top: 0; left: 0;
+			  height: 100%;
+			  width: 0%;
+			  background: linear-gradient(135deg, #1a7a3a 0%, #28c76f 100%);
+			  transition: none;
+			  border-radius: 14px;
+			  z-index: 0;
+			}
+
+			.btn-submit span {
+			  position: relative;
+			  z-index: 1;
+			}
+
+			.card-footer {
+			  text-align: center;
+			  padding: 0 28px 22px;
+			  font-size: 12px;
+			  color: #aab4c2;
+			}
+
+			.errore {
+			  display: none;
+			  background: #fee2e2;
+			  color: #b91c1c;
+			  border-radius: 10px;
+			  padding: 12px 14px;
+			  font-size: 13px;
+			  font-weight: 600;
+			  margin-bottom: 18px;
+			}
+			.errore.show { display: block; }
+		</style>
+	</head>
+	<body>
+		<div class="card">
+			<div class="card-header">
+				<div class="label">Modulo di registrazione</div>
+				<h1>Ore Lavorate</h1>
+			</div>
+
+			<form id="form">
+				<div class="card-body">
+					<div class="errore" id="errore"></div>
+
+					<div class="field">
+						<label for="data">Data</label>
+						<input type="date" id="data" name="data" required />
+					</div>
+
+					<div class="field">
+						<label for="nome">Nome</label>
+						<select id="nome" name="nome" required>
+							<option value="" disabled selected>
+								Seleziona il tuo nome
+							</option>
+							<option>Adriano Massimo</option>
+							<option>Beltrami Fabrizio</option>
+							<option>Beltrami Valeria</option>
+							<option>Branchini Sauro</option>
+							<option>Loi Stefano</option>
+							<option>Longu Alessandro</option>
+							<option>Mussini Davide</option>
+							<option>Nanetti Marco</option>
+							<option>Pascarella Antonio</option>
+							<option>Romani Nadia</option>
+							<option>Romani Fabiana</option>
+							<option>Santini Fabio</option>
+						</select>
+					</div>
+
+					<div class="divider"></div>
+
+					<div id="lavori-container"></div>
+
+					<button type="button" class="btn-add" id="btn-add">
+						＋ Aggiungi lavoro
+					</button>
+
+					<button type="submit" class="btn-submit" id="btn-submit">
+						<div class="btn-fill" id="btn-fill"></div>
+						<span id="btn-text">✉ Invia Registrazione</span>
+					</button>
+				</div>
+			</form>
+
+			<div class="card-footer">Tutti i campi sono obbligatori</div>
+		</div>
+
+		<script>
+			const container = document.getElementById('lavori-container');
+			const btnAdd = document.getElementById('btn-add');
+			const form = document.getElementById('form');
+			const btn = document.getElementById('btn-submit');
+			const fill = document.getElementById('btn-fill');
+			const btnText = document.getElementById('btn-text');
+			const errore = document.getElementById('errore');
+			let count = 0;
+
+			function addSezione() {
+			  count++;
+			  const idx = count;
+			  const div = document.createElement('div');
+			  div.className = 'lavoro-section';
+			  div.dataset.idx = idx;
+			  div.innerHTML = `
+			    <div class="section-title">Lavoro ${idx}</div>
+			    ${idx > 1 ? '<button type="button" class="btn-remove" title="Rimuovi">✕</button>' : ''}
+			    <div class="field">
+			      <label>Luogo di Lavoro</label>
+			      <input type="text" placeholder="Es. Sede Milano" class="f-luogo" required>
+			    </div>
+			    <div class="field">
+			      <label>Ore Lavorate</label>
+			      <input type="number" placeholder="Es. 8" min="0" max="24" step="0.5" class="f-ore" required>
+			    </div>
+			    <div class="field">
+			      <label>Lavoro Svolto</label>
+			      <textarea placeholder="Es. Installazione impianto elettrico" rows="3" class="f-lavoro" required></textarea>
+			    </div>
+			  `;
+
+			  div.querySelector('.f-lavoro').addEventListener('input', function() {
+			    this.style.height = 'auto';
+			    this.style.height = this.scrollHeight + 'px';
+			  });
+
+			  const removeBtn = div.querySelector('.btn-remove');
+			  if (removeBtn) {
+			    removeBtn.addEventListener('click', function() {
+			      div.remove();
+			      rinumeraSezioni();
+			    });
+			  }
+
+			  container.appendChild(div);
+			}
+
+			function rinumeraSezioni() {
+			  const sezioni = container.querySelectorAll('.lavoro-section');
+			  sezioni.forEach(function(s, i) {
+			    s.querySelector('.section-title').textContent = 'Lavoro ' + (i + 1);
+			    const rb = s.querySelector('.btn-remove');
+			    if (i === 0 && rb) rb.remove();
+			    if (i > 0 && !rb) {
+			      const newRb = document.createElement('button');
+			      newRb.type = 'button';
+			      newRb.className = 'btn-remove';
+			      newRb.title = 'Rimuovi';
+			      newRb.textContent = '✕';
+			      newRb.addEventListener('click', function() {
+			        s.remove();
+			        rinumeraSezioni();
+			      });
+			      s.appendChild(newRb);
+			    }
+			  });
+			}
+
+			btnAdd.addEventListener('click', addSezione);
+			addSezione();
+
+			form.addEventListener('submit', async function(e) {
+			  e.preventDefault();
+			  errore.classList.remove('show');
+
+			  if (!form.checkValidity()) { form.reportValidity(); return; }
+
+			  const nome = document.getElementById('nome').value.trim();
+			  const data = document.getElementById('data').value;
+
+			  const attivita = [];
+			  container.querySelectorAll('.lavoro-section').forEach(function(s) {
+			    attivita.push({
+			      luogo: s.querySelector('.f-luogo').value.trim(),
+			      ore: parseFloat(s.querySelector('.f-ore').value),
+			      lavoro: s.querySelector('.f-lavoro').value.trim()
+			    });
+			  });
+
+			  btn.disabled = true;
+			  btnText.textContent = 'Invio in corso...';
+			  fill.style.transition = 'none';
+			  fill.style.width = '0%';
+			  fill.getBoundingClientRect();
+			  requestAnimationFrame(function() {
+			    fill.style.transition = 'width 1.2s linear';
+			    fill.style.width = '100%';
+			  });
+
+			  try {
+			    const res = await fetch('/api', {
+			      method: 'POST',
+			      headers: { 'Content-Type': 'application/json' },
+			      body: JSON.stringify({ action: 'add-entry', nome, data, attivita })
+			    });
+			    const out = await res.json();
+			    if (!res.ok) throw new Error(out.error || 'Errore invio');
+
+			    setTimeout(function() {
+			      btnText.textContent = '✓ Inviato!';
+			    }, 1200);
+			    setTimeout(function() {
+			      form.reset();
+			      container.innerHTML = '';
+			      count = 0;
+			      addSezione();
+			      btn.disabled = false;
+			      btnText.textContent = '✉ Invia Registrazione';
+			      fill.style.transition = 'none';
+			      fill.style.width = '0%';
+			    }, 2200);
+			  } catch (err) {
+			    errore.textContent = err.message;
+			    errore.classList.add('show');
+			    btn.disabled = false;
+			    btnText.textContent = '✉ Invia Registrazione';
+			    fill.style.transition = 'none';
+			    fill.style.width = '0%';
+			  }
+			});
+		</script>
+	</body>
+</html>

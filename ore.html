@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔎</title>
+<style>
+:root {
+  --bg: #080d1a;
+  --card: #111c30;
+  --card-border: rgba(96,165,250,.10);
+  --muted: #6b7fa8;
+  --text: #dce6f8;
+  --text-dim: #a0b0cc;
+  --blue: #60a5fa;
+  --violet: #a78bfa;
+  --shadow: 0 24px 48px rgba(0,0,0,.5);
+  --radius: 14px;
+}
+*{box-sizing:border-box;}
+html{
+  min-height:100%;
+  background:
+    radial-gradient(ellipse 900px 500px at 5% 0%, rgba(96,165,250,.13) 0%, transparent 65%),
+    radial-gradient(ellipse 700px 400px at 95% 15%, rgba(167,139,250,.11) 0%, transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+}
+body { font-family: system-ui, -apple-system, sans-serif; color: var(--text); margin: 0; padding: 16px; min-height:100vh; }
+
+.header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; max-width: 900px; margin-left:auto; margin-right:auto; }
+.icon-box { width: 44px; height: 44px; background: linear-gradient(135deg, var(--blue), var(--violet)); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(96,165,250,.25); flex-shrink: 0; }
+.icon-box svg { stroke: #fff; width: 24px; fill: none; }
+#stampa { margin-left: auto; border: none; border-radius: 10px; padding: 11px 18px; font-weight: 700; color: #06101f; background: linear-gradient(90deg, var(--blue), var(--violet)); cursor: pointer; transition: filter .15s; font-family: inherit; }
+#stampa:hover { filter: brightness(1.1); }
+#logout { border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); color: var(--text-dim); border-radius: 10px; padding: 11px 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+.card { max-width:900px; margin:0 auto 20px; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); }
+
+.field { margin-bottom: 16px; }
+.field label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; display: block; font-weight: 600; letter-spacing: .04em; }
+select, input[type="password"] { width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.025); color: var(--text); font-size: .95rem; outline: none; appearance: none; font-family:inherit; }
+select:focus, input[type="password"]:focus { border-color: rgba(96,165,250,.45); box-shadow: 0 0 0 3px rgba(96,165,250,.08); }
+select option{background:#111c30;color:var(--text);}
+
+.btn-primary { width:100%; border:none; border-radius:10px; padding:13px 18px; font-size:.95rem; font-weight:700; cursor:pointer; color:#06101f; background:linear-gradient(90deg,var(--blue),var(--violet)); font-family:inherit; }
+.btn-primary:hover{filter:brightness(1.1);}
+.hint { font-size:.82rem; color:var(--muted); margin-top:10px; text-align:center; }
+.errore { display:none; background:rgba(239,68,68,.10); border:1px solid rgba(239,68,68,.20); color:#fca5a5; border-radius:10px; padding:12px 14px; font-size:.85rem; font-weight:600; margin-bottom:16px; }
+.errore.show{display:block;}
+
+.table-wrapper { max-width:900px; margin: 0 auto; overflow-x: auto; background: var(--card); border-radius: var(--radius); border: 1px solid var(--card-border); padding: 8px; }
+table { width: 100%; border-collapse: collapse; min-width: 500px; }
+th { color: var(--blue); font-size: 0.7rem; padding: 12px; text-align: left; border-bottom: 1px solid var(--card-border); text-transform: uppercase; letter-spacing: .12em; }
+td { padding: 14px; border-top: 1px solid rgba(255,255,255,.05); font-size: 0.9rem; color: var(--text); }
+
+.print-area { display:none; }
+@media print {
+  body > *:not(.print-area) { display: none !important; }
+  .print-area { display: block !important; }
+  .print-area table { width:100%; border-collapse:collapse; }
+  .print-area th, .print-area td { border:1px solid #999; padding:8px; font-size:12px; color:#000; }
+  .print-area h1 { font-size:16px; margin-bottom:12px; color:#000; }
+}
+</style>
+</head>
+<body>
+
+<div id="vistaLogin">
+  <div class="header">
+    <div class="icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    <div><h1 style="margin:0; font-size:1.2rem;">Le mie ore</h1><p style="margin:0; color:var(--muted); font-size:0.8rem;">Accedi per consultare i tuoi dati</p></div>
+  </div>
+  <div class="card">
+    <div class="errore" id="loginErrore"></div>
+    <div class="field">
+      <label>Nome</label>
+      <select id="loginNome">
+        <option value="" disabled selected>Seleziona il tuo nome</option>
+        <option>Adriano Massimo</option>
+        <option>Beltrami Fabrizio</option>
+        <option>Beltrami Valeria</option>
+        <option>Branchini Sauro</option>
+        <option>Loi Stefano</option>
+        <option>Longu Alessandro</option>
+        <option>Mussini Davide</option>
+        <option>Nanetti Marco</option>
+        <option>Pascarella Antonio</option>
+        <option>Romani Nadia</option>
+        <option>Romani Fabiana</option>
+        <option>Santini Fabio</option>
+      </select>
+    </div>
+    <div class="field">
+      <label id="passLabel">Password</label>
+      <input type="password" id="loginPass" autocomplete="off" />
+    </div>
+    <button class="btn-primary" id="btnLogin">Accedi</button>
+    <div class="hint" id="loginHint"></div>
+  </div>
+</div>
+
+<div id="vistaDati" style="display:none;">
+  <div class="header">
+    <div class="icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    <div><h1 style="margin:0; font-size:1.2rem;" id="titoloDati">Le mie ore</h1><p style="margin:0; color:var(--muted); font-size:0.8rem;">Schede giornaliere</p></div>
+    <button id="stampa">Stampa</button>
+    <button id="logout">Esci</button>
+  </div>
+
+  <div class="card">
+    <div class="field"><label>Anno</label><select id="visAnno"><option value="">— Seleziona Anno —</option></select></div>
+    <div class="field"><label>Mese</label><select id="visMese"><option value="">— Seleziona Mese —</option></select></div>
+  </div>
+
+  <div class="table-wrapper" id="tabellaRisultati"></div>
+</div>
+
+<div class="print-area" id="printArea"></div>
+
+<script>
+const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+
+let datiUtente = {};
+let nomeCorrente = '';
+
+const $vistaLogin = document.getElementById('vistaLogin');
+const $vistaDati = document.getElementById('vistaDati');
+const $loginNome = document.getElementById('loginNome');
+const $loginPass = document.getElementById('loginPass');
+const $btnLogin = document.getElementById('btnLogin');
+const $loginErrore = document.getElementById('loginErrore');
+const $loginHint = document.getElementById('loginHint');
+const $passLabel = document.getElementById('passLabel');
+const $titoloDati = document.getElementById('titoloDati');
+const $visAnno = document.getElementById('visAnno');
+const $visMese = document.getElementById('visMese');
+const $tabResults = document.getElementById('tabellaRisultati');
+const $stampa = document.getElementById('stampa');
+const $logout = document.getElementById('logout');
+const $printArea = document.getElementById('printArea');
+
+let modalitaCreazione = false;
+
+async function controllaNome() {
+  $loginErrore.classList.remove('show');
+  $loginHint.textContent = '';
+  if (!$loginNome.value) return;
+  try {
+    const res = await fetch('/api', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'check-worker', nome: $loginNome.value })
+    });
+    const out = await res.json();
+    modalitaCreazione = !out.hasPassword;
+    if (modalitaCreazione) {
+      $passLabel.textContent = 'Crea una password';
+      $loginHint.textContent = 'Nessuna password impostata: scegline una per proteggere i tuoi dati.';
+      $btnLogin.textContent = 'Crea password e accedi';
+    } else {
+      $passLabel.textContent = 'Password';
+      $loginHint.textContent = '';
+      $btnLogin.textContent = 'Accedi';
+    }
+  } catch (e) {}
+}
+$loginNome.addEventListener('change', controllaNome);
+
+$btnLogin.addEventListener('click', async () => {
+  $loginErrore.classList.remove('show');
+  const nome = $loginNome.value;
+  const password = $loginPass.value;
+  if (!nome) { $loginErrore.textContent = 'Seleziona il tuo nome'; $loginErrore.classList.add('show'); return; }
+  if (!password || password.length < 4) { $loginErrore.textContent = 'Password di almeno 4 caratteri'; $loginErrore.classList.add('show'); return; }
+
+  $btnLogin.disabled = true;
+  try {
+    if (modalitaCreazione) {
+      const res = await fetch('/api', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'set-worker-password', nome, password })
+      });
+      const out = await res.json();
+      if (!res.ok) throw new Error(out.error || 'Errore creazione password');
+    }
+    const res2 = await fetch('/api', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'login-worker', nome, password })
+    });
+    const out2 = await res2.json();
+    if (!res2.ok) throw new Error(out2.error || 'Password errata');
+
+    nomeCorrente = nome;
+    datiUtente = out2.dati || {};
+    entraInDati();
+  } catch (e) {
+    $loginErrore.textContent = e.message;
+    $loginErrore.classList.add('show');
+  } finally {
+    $btnLogin.disabled = false;
+  }
+});
+
+function entraInDati() {
+  $vistaLogin.style.display = 'none';
+  $vistaDati.style.display = 'block';
+  $titoloDati.textContent = nomeCorrente;
+  const anni = [...new Set(Object.keys(datiUtente).map(k => k.slice(0,4)))].sort().reverse();
+  $visAnno.innerHTML = '<option value="">— Seleziona Anno —</option>';
+  anni.forEach(a => { const o = document.createElement('option'); o.value=a; o.textContent=a; $visAnno.appendChild(o); });
+  $visMese.innerHTML = '<option value="">— Seleziona Mese —</option>';
+  $tabResults.innerHTML = '';
+}
+
+$visAnno.onchange = () => {
+  $visMese.innerHTML = '<option value="">— Seleziona Mese —</option>';
+  Object.keys(datiUtente).filter(k => k.startsWith($visAnno.value)).map(k => k.slice(5,7)).forEach(m => {
+    const o = document.createElement('option'); o.value=m; o.textContent=MESI[parseInt(m,10)-1]; $visMese.appendChild(o);
+  });
+  $tabResults.innerHTML = '';
+};
+
+function costruisciTabella() {
+  const k = $visAnno.value + '-' + $visMese.value;
+  const giorni = datiUtente[k];
+  if (!giorni) return '';
+  let html = `<table class="tabellaStampa"><thead><tr><th>Data</th><th>Luogo</th><th>Lavoro</th><th>Ore</th></tr></thead><tbody>`;
+  let tot = 0, ultimaData = "";
+  giorni.forEach(giorno => {
+    giorno.attivita.forEach(att => {
+      const [y,m,d] = giorno.data.split('-');
+      const dataFormat = `${d}/${m}`;
+      const visualizzaData = (dataFormat === ultimaData) ? "" : dataFormat;
+      html += `<tr><td>${visualizzaData}</td><td>${att.luogo}</td><td>${att.lavoro}</td><td>${att.ore}h</td></tr>`;
+      ultimaData = dataFormat;
+      tot += att.ore;
+    });
+  });
+  html += `</tbody><tfoot><tr><td colspan="3" style="text-align:right; font-weight:bold;">Totale:</td><td style="font-weight:bold;">${tot} h</td></tr></tfoot></table>`;
+  return html;
+}
+
+$visMese.onchange = () => {
+  $tabResults.innerHTML = costruisciTabella();
+};
+
+$stampa.addEventListener('click', () => {
+  const html = costruisciTabella();
+  if (!html) { alert('Seleziona anno e mese'); return; }
+  $printArea.innerHTML = `<h1>Riepilogo ore: ${nomeCorrente} — ${MESI[parseInt($visMese.value,10)-1]} ${$visAnno.value}</h1>${html}`;
+  window.print();
+});
+
+$logout.addEventListener('click', () => {
+  nomeCorrente = ''; datiUtente = {};
+  $loginPass.value = '';
+  $vistaDati.style.display = 'none';
+  $vistaLogin.style.display = 'block';
+});
+</script>
+</body>
+</html>
