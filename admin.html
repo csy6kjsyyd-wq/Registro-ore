@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>🗂️</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg: #080d1a;
@@ -194,6 +196,24 @@ textarea{resize:vertical;min-height:70px;}
 }
 .op-nome{font-size:.9rem;font-weight:600;}
 .op-stato{font-size:.75rem;color:var(--muted);margin-top:2px;}
+
+.toggle-group{display:flex;gap:8px;margin-bottom:16px;}
+.toggle-btn{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);color:var(--text-dim);font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:filter .15s;}
+.toggle-btn.attivo{background:linear-gradient(90deg,var(--blue),var(--violet));color:#06101f;border-color:transparent;}
+
+.table-wrapper{overflow-x:auto;background:rgba(255,255,255,.015);border-radius:12px;border:1px solid rgba(255,255,255,.06);padding:8px;margin-top:16px;}
+.table-wrapper table{width:100%;border-collapse:collapse;min-width:500px;}
+.table-wrapper th{color:var(--blue);font-size:.7rem;padding:12px;text-align:left;border-bottom:1px solid var(--card-border);text-transform:uppercase;letter-spacing:.12em;}
+.table-wrapper td{padding:14px;border-top:1px solid rgba(255,255,255,.05);font-size:.9rem;color:var(--text);}
+.table-wrapper tbody tr{cursor:pointer;}
+.table-wrapper tbody tr:hover{background:rgba(255,255,255,.04);}
+
+.print-area{position:absolute;left:-9999px;top:0;width:700px;background:#fff;padding:30px;font-family:sans-serif;}
+.print-area h1{font-size:18px;margin-bottom:4px;color:#000;}
+.print-area h3{color:#1d4ed8;margin:18px 0 6px;font-size:15px;}
+.print-area table{width:100%;border-collapse:collapse;margin-top:10px;}
+.print-area th,.print-area td{border:1px solid #999;padding:8px;font-size:13px;color:#000;text-align:left;}
+.print-area th{background:#eee;}
 </style>
 </head>
 <body>
@@ -227,6 +247,7 @@ textarea{resize:vertical;min-height:70px;}
   <div class="tabs">
     <button class="tab-btn attivo" id="tabInserisci">Inserisci</button>
     <button class="tab-btn" id="tabModifica">Modifica</button>
+    <button class="tab-btn" id="tabVisualizza">Visualizza</button>
     <button class="tab-btn" id="tabPassword">Password operai</button>
   </div>
 
@@ -326,6 +347,40 @@ textarea{resize:vertical;min-height:70px;}
     </div>
   </div>
 
+  <div id="vistaVis" style="display:none;">
+    <div class="card">
+      <div class="section-label">Visualizza dati</div>
+      <div class="grid">
+        <div class="col-6 field">
+          <label>Anno</label>
+          <select id="visAnno"><option value="">— Seleziona Anno —</option></select>
+        </div>
+        <div class="col-6 field">
+          <label>Mese</label>
+          <select id="visMese"><option value="">— Seleziona Mese —</option></select>
+        </div>
+      </div>
+      <div class="field" style="margin-top:16px;">
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn attivo" id="modoDipendente">Dipendente</button>
+          <button type="button" class="toggle-btn" id="modoLuogo">Luogo</button>
+        </div>
+        <div id="campoDipendente" class="field"><label>Dipendente</label><select id="visNome"><option value="">— Seleziona Dipendente —</option></select></div>
+        <div id="campoLuogo" class="field" style="display:none;"><label>Luogo</label><input type="text" id="visLuogo" placeholder="Cerca luogo…"></div>
+      </div>
+      <div class="actions" style="margin-left:0;">
+        <button class="btn btn-primary" id="btnScaricaPdf" style="width:100%;justify-content:center;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="btnScaricaPdfLabel">Scarica PDF</span>
+        </button>
+      </div>
+      <div class="table-wrapper" id="tabellaRisultati"></div>
+      <div class="errore" id="visErrore"></div>
+    </div>
+  </div>
+
+  <div class="print-area" id="printArea"></div>
+
   <div class="status" id="statusOk"></div>
 </div>
 
@@ -357,7 +412,9 @@ const $adminPass = document.getElementById('adminPass'), $btnAdminLogin = docume
 const $loginErrore = document.getElementById('loginErrore');
 
 const $vistaIns = document.getElementById('vistaInserisci'), $vistaMod = document.getElementById('vistaMod'), $vistaPass = document.getElementById('vistaPassword');
+const $vistaVis = document.getElementById('vistaVis');
 const $tabInserisci = document.getElementById('tabInserisci'), $tabModifica = document.getElementById('tabModifica'), $tabPassword = document.getElementById('tabPassword');
+const $tabVisualizza = document.getElementById('tabVisualizza');
 const $form = document.getElementById('formOre'), $container = document.getElementById('lavoriContainer');
 const $btnAggiungi = document.getElementById('btnAggiungi'), $btnSalva = document.getElementById('btnSalva');
 const $btnPulisci = document.getElementById('pulisci'), $totText = document.getElementById('totText');
@@ -410,14 +467,17 @@ $btnAdminLogin.addEventListener('click', async () => {
 $adminPass.addEventListener('keydown', e => { if(e.key === 'Enter') $btnAdminLogin.click(); });
 
 function attivaTab(nome){
-  [$vistaIns, $vistaMod, $vistaPass].forEach(v => v.style.display = 'none');
-  [$tabInserisci, $tabModifica, $tabPassword].forEach(t => t.classList.remove('attivo'));
+  [$vistaIns, $vistaMod, $vistaPass, $vistaVis].forEach(v => v.style.display = 'none');
+  [$tabInserisci, $tabModifica, $tabPassword, $tabVisualizza].forEach(t => t.classList.remove('attivo'));
   if(nome === 'inserisci'){
     $vistaIns.style.display = 'block'; $tabInserisci.classList.add('attivo');
     $hTitle.textContent = "Registro Ore Lavorate"; $hSub.textContent = "Registrazione presenze giornaliere";
   } else if(nome === 'modifica'){
     $vistaMod.style.display = 'block'; $tabModifica.classList.add('attivo'); popolaAnni();
     $hTitle.textContent = "Modifica"; $hSub.textContent = "Gestione dati esistenti";
+  } else if(nome === 'visualizza'){
+    $vistaVis.style.display = 'block'; $tabVisualizza.classList.add('attivo'); popolaAnniVis();
+    $hTitle.textContent = "Visualizza"; $hSub.textContent = "Schede giornaliere";
   } else {
     $vistaPass.style.display = 'block'; $tabPassword.classList.add('attivo'); renderPassword();
     $hTitle.textContent = "Password operai"; $hSub.textContent = "Reimposta l'accesso di un dipendente";
@@ -425,6 +485,7 @@ function attivaTab(nome){
 }
 $tabInserisci.addEventListener('click', () => attivaTab('inserisci'));
 $tabModifica.addEventListener('click', () => attivaTab('modifica'));
+$tabVisualizza.addEventListener('click', () => attivaTab('visualizza'));
 $tabPassword.addEventListener('click', () => attivaTab('password'));
 
 function creaBlock(n){
@@ -563,6 +624,160 @@ function renderPassword(){
     $opList.appendChild(row);
   });
 }
+
+const $visAnno = document.getElementById('visAnno'), $visMese = document.getElementById('visMese');
+const $visNome = document.getElementById('visNome'), $visLuogo = document.getElementById('visLuogo');
+const $campoDipendente = document.getElementById('campoDipendente'), $campoLuogo = document.getElementById('campoLuogo');
+const $modoDipendente = document.getElementById('modoDipendente'), $modoLuogo = document.getElementById('modoLuogo');
+const $tabellaRisultati = document.getElementById('tabellaRisultati');
+const $btnScaricaPdf = document.getElementById('btnScaricaPdf'), $btnScaricaPdfLabel = document.getElementById('btnScaricaPdfLabel');
+const $visErrore = document.getElementById('visErrore');
+const $printArea = document.getElementById('printArea');
+
+let modoVis = 'dipendente';
+
+$modoDipendente.addEventListener('click', () => {
+  modoVis = 'dipendente';
+  $modoDipendente.classList.add('attivo'); $modoLuogo.classList.remove('attivo');
+  $campoDipendente.style.display = ''; $campoLuogo.style.display = 'none';
+  $visLuogo.value = ''; $tabellaRisultati.innerHTML = '';
+});
+$modoLuogo.addEventListener('click', () => {
+  modoVis = 'luogo';
+  $modoLuogo.classList.add('attivo'); $modoDipendente.classList.remove('attivo');
+  $campoLuogo.style.display = ''; $campoDipendente.style.display = 'none';
+  $visNome.value = ''; $tabellaRisultati.innerHTML = '';
+});
+
+function popolaAnniVis(){
+  const anni = [...new Set(Object.keys(dati).map(k => k.slice(0,4)))].sort().reverse();
+  $visAnno.innerHTML = '<option value="">— Seleziona Anno —</option>';
+  anni.forEach(a => { const o = document.createElement('option'); o.value=a; o.textContent=a; $visAnno.appendChild(o); });
+  $visMese.innerHTML = '<option value="">— Seleziona Mese —</option>';
+  $visNome.innerHTML = '<option value="">— Seleziona Dipendente —</option>';
+  $visLuogo.value = ''; $tabellaRisultati.innerHTML = '';
+}
+$visAnno.onchange = () => {
+  $visMese.innerHTML = '<option value="">— Seleziona Mese —</option>';
+  Object.keys(dati).filter(k => k.startsWith($visAnno.value)).map(k => k.slice(5,7)).forEach(m => {
+    const o = document.createElement('option'); o.value=m; o.textContent=MESI[parseInt(m,10)-1]; $visMese.appendChild(o);
+  });
+  $tabellaRisultati.innerHTML = '';
+};
+$visMese.onchange = () => {
+  $visNome.innerHTML = '<option value="">— Seleziona Dipendente —</option>';
+  const k = $visAnno.value + '-' + $visMese.value;
+  if(dati[k]) Object.keys(dati[k]).forEach(n => { const o = document.createElement('option'); o.value=n; o.textContent=n; $visNome.appendChild(o); });
+  $visLuogo.value = ''; $tabellaRisultati.innerHTML = '';
+};
+$visNome.onchange = renderTabellaDipendente;
+$visLuogo.addEventListener('input', renderTabellaLuogo);
+
+function attivaEvidenziazione(){
+  $tabellaRisultati.querySelectorAll('.tabellaStampa tbody tr').forEach(tr => {
+    tr.addEventListener('click', () => {
+      const evidenziata = tr.dataset.evidenziata === '1';
+      tr.dataset.evidenziata = evidenziata ? '0' : '1';
+      tr.querySelectorAll('td').forEach(td => {
+        if(evidenziata){ td.style.backgroundColor = ''; td.style.color = ''; }
+        else { td.style.backgroundColor = '#ffeb3b'; td.style.color = '#000'; }
+      });
+    });
+  });
+}
+
+function renderTabellaDipendente(){
+  const k = $visAnno.value + '-' + $visMese.value;
+  if(!dati[k] || !dati[k][$visNome.value]) { $tabellaRisultati.innerHTML = ''; return; }
+  let html = `<table class="tabellaStampa"><thead><tr><th>Data</th><th>Luogo</th><th>Lavoro</th><th>Ore</th></tr></thead><tbody>`;
+  let tot = 0, ultimaData = "";
+  dati[k][$visNome.value].forEach(giorno => {
+    giorno.attivita.forEach(att => {
+      const [y,m,d] = giorno.data.split('-');
+      const dataFormat = `${d}/${m}`;
+      const visualizzaData = (dataFormat === ultimaData) ? "" : dataFormat;
+      html += `<tr><td>${visualizzaData}</td><td>${att.luogo}</td><td>${att.lavoro}</td><td>${att.ore}h</td></tr>`;
+      ultimaData = dataFormat; tot += att.ore;
+    });
+  });
+  html += `</tbody><tfoot><tr><td colspan="3" style="text-align:right; font-weight:bold;">Totale:</td><td style="font-weight:bold;">${tot} h</td></tr></tfoot></table>`;
+  $tabellaRisultati.innerHTML = html;
+  attivaEvidenziazione();
+}
+
+function renderTabellaLuogo(){
+  const k = $visAnno.value + '-' + $visMese.value;
+  const query = $visLuogo.value.trim().toLowerCase();
+  if(!dati[k] || !query) { $tabellaRisultati.innerHTML = ''; return; }
+  const gruppi = {};
+  Object.keys(dati[k]).sort().forEach(nome => {
+    dati[k][nome].forEach(giorno => {
+      giorno.attivita.forEach(att => {
+        if(!att.luogo || !att.luogo.toLowerCase().includes(query)) return;
+        if(!gruppi[nome]) gruppi[nome] = [];
+        gruppi[nome].push({ data: giorno.data, luogo: att.luogo, lavoro: att.lavoro, ore: att.ore });
+      });
+    });
+  });
+  const nomiTrovati = Object.keys(gruppi);
+  if(nomiTrovati.length === 0) { $tabellaRisultati.innerHTML = ''; return; }
+  let html = '';
+  nomiTrovati.forEach(nome => {
+    let tot = 0, ultimaData = "";
+    html += `<h3 style="margin:18px 0 6px; color:#60a5fa; font-size:0.95rem;">${nome}</h3>`;
+    html += `<table class="tabellaStampa"><thead><tr><th>Data</th><th>Luogo</th><th>Lavoro</th><th>Ore</th></tr></thead><tbody>`;
+    gruppi[nome].forEach(item => {
+      const [y,m,d] = item.data.split('-');
+      const dataFormat = `${d}/${m}`;
+      const visualizzaData = (dataFormat === ultimaData) ? "" : dataFormat;
+      html += `<tr><td>${visualizzaData}</td><td>${item.luogo}</td><td>${item.lavoro}</td><td>${item.ore}h</td></tr>`;
+      ultimaData = dataFormat; tot += item.ore;
+    });
+    html += `</tbody><tfoot><tr><td colspan="3" style="text-align:right; font-weight:bold;">Totale:</td><td style="font-weight:bold;">${tot} h</td></tr></tfoot></table>`;
+  });
+  $tabellaRisultati.innerHTML = html;
+  attivaEvidenziazione();
+}
+
+$btnScaricaPdf.addEventListener('click', async () => {
+  if(!$tabellaRisultati.querySelector('table')){
+    mostraErrore($visErrore, modoVis === 'luogo' ? 'Cerca un luogo' : 'Seleziona un dipendente');
+    return;
+  }
+  const titolo = modoVis === 'luogo' ? $visLuogo.value : $visNome.value;
+  $printArea.innerHTML = `<h1>Riepilogo: ${titolo}</h1>${$tabellaRisultati.innerHTML}`;
+
+  const testoOriginale = $btnScaricaPdfLabel.textContent;
+  $btnScaricaPdf.disabled = true;
+  $btnScaricaPdfLabel.textContent = 'Generazione PDF...';
+
+  try{
+    const canvas = await html2canvas($printArea, { scale: 2, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight, position = 0;
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    const nomeFile = `Riepilogo_${titolo.replace(/\s+/g,'_')}.pdf`;
+    pdf.save(nomeFile);
+  }catch(e){
+    mostraErrore($visErrore, 'Errore nella generazione del PDF: ' + e.message);
+  }finally{
+    $btnScaricaPdf.disabled = false;
+    $btnScaricaPdfLabel.textContent = testoOriginale;
+  }
+});
 </script>
 </body>
 </html>
