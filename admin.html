@@ -483,10 +483,10 @@ function attivaTab(nome){
     $hTitle.textContent = "Password operai"; $hSub.textContent = "Reimposta l'accesso di un dipendente";
   }
 }
-$tabInserisci.addEventListener('click', () => attivaTab('inserisci'));
-$tabModifica.addEventListener('click', () => attivaTab('modifica'));
-$tabVisualizza.addEventListener('click', () => attivaTab('visualizza'));
-$tabPassword.addEventListener('click', () => attivaTab('password'));
+$tabInserisci.addEventListener('click', () => { try{ attivaTab('inserisci'); }catch(e){ alert('Errore: ' + e.message); } });
+$tabModifica.addEventListener('click', () => { try{ attivaTab('modifica'); }catch(e){ alert('Errore: ' + e.message); } });
+$tabVisualizza.addEventListener('click', () => { try{ attivaTab('visualizza'); }catch(e){ alert('Errore: ' + e.message); } });
+$tabPassword.addEventListener('click', () => { try{ attivaTab('password'); }catch(e){ alert('Errore: ' + e.message); } });
 
 function creaBlock(n){
   const div = document.createElement('div'); div.className = 'lavoro-block';
@@ -587,10 +587,14 @@ $btnSalvaMod.onclick = async ()=>{
   $btnSalvaMod.disabled = true;
   try{
     await apiCall('save-admin', { password: adminPassword, dati });
+    const verifica = await apiCall('get-admin', { password: adminPassword });
+    const salvatoOk = JSON.stringify(verifica.dati[k] && verifica.dati[k][n]) === JSON.stringify(dati[k] && dati[k][n]);
+    alert(salvatoOk ? 'Verifica: i dati sul server corrispondono a quelli salvati.' : 'ATTENZIONE: i dati sul server NON corrispondono a quelli inviati.\n\nInviato: ' + JSON.stringify(dati[k] && dati[k][n]) + '\n\nSul server: ' + JSON.stringify(verifica.dati[k] && verifica.dati[k][n]));
     const L = $btnSalvaModLabel; L.textContent = "Modifiche salvate";
     mostraStatus("Modifiche salvate correttamente");
     setTimeout(()=>{ L.textContent="Salva modifiche"; }, 2500);
   }catch(err){
+    alert('Errore salvataggio: ' + err.message);
     mostraErrore($modErrore, err.message);
   }finally{
     $btnSalvaMod.disabled = false;
@@ -650,6 +654,7 @@ $modoLuogo.addEventListener('click', () => {
 });
 
 function popolaAnniVis(){
+  alert('Diagnostica Visualizza: chiavi in dati = ' + Object.keys(dati).length + (Object.keys(dati).length ? (' (es: ' + Object.keys(dati)[0] + ')') : ''));
   const anni = [...new Set(Object.keys(dati).map(k => k.slice(0,4)))].sort().reverse();
   $visAnno.innerHTML = '<option value="">— Seleziona Anno —</option>';
   anni.forEach(a => { const o = document.createElement('option'); o.value=a; o.textContent=a; $visAnno.appendChild(o); });
