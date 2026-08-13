@@ -426,6 +426,15 @@ const $statusOk = document.getElementById('statusOk');
 const $insErrore = document.getElementById('insErrore'), $modErrore = document.getElementById('modErrore'), $passErrore = document.getElementById('passErrore');
 const $opList = document.getElementById('opList');
 
+const $visAnno = document.getElementById('visAnno'), $visMese = document.getElementById('visMese');
+const $visNome = document.getElementById('visNome'), $visLuogo = document.getElementById('visLuogo');
+const $campoDipendente = document.getElementById('campoDipendente'), $campoLuogo = document.getElementById('campoLuogo');
+const $modoDipendente = document.getElementById('modoDipendente'), $modoLuogo = document.getElementById('modoLuogo');
+const $tabellaRisultati = document.getElementById('tabellaRisultati');
+const $btnScaricaPdf = document.getElementById('btnScaricaPdf'), $btnScaricaPdfLabel = document.getElementById('btnScaricaPdfLabel');
+const $visErrore = document.getElementById('visErrore');
+const $printArea = document.getElementById('printArea');
+
 function mostraStatus(msg){
   $statusOk.textContent = msg; $statusOk.classList.add('show');
   setTimeout(()=>$statusOk.classList.remove('show'), 2500);
@@ -577,15 +586,15 @@ $btnAnnulla.addEventListener('click', () => attivaTab('inserisci'));
 $btnSalvaMod.onclick = async ()=>{
   const k=$modAnno.value+'-'+$modMese.value, n=$modNome.value;
   if(!k || k === '-' || !n) return mostraErrore($modErrore, "Seleziona anno, mese e dipendente");
-  $modResults.querySelectorAll('.mod-giorno').forEach((card,vi)=>{
-    const att=[];
-    card.querySelectorAll('.mod-att-row').forEach(row=>{
-      att.push({luogo:row.querySelector('.mod-luogo').value, ore:parseOre(row.querySelector('.mod-ore').value), lavoro:row.querySelector('.mod-lavoro').value});
-    });
-    dati[k][n][vi].attivita=att;
-  });
   $btnSalvaMod.disabled = true;
   try{
+    $modResults.querySelectorAll('.mod-giorno').forEach((card,vi)=>{
+      const att=[];
+      card.querySelectorAll('.mod-att-row').forEach(row=>{
+        att.push({luogo:row.querySelector('.mod-luogo').value, ore:parseOre(row.querySelector('.mod-ore').value), lavoro:row.querySelector('.mod-lavoro').value});
+      });
+      dati[k][n][vi].attivita=att;
+    });
     await apiCall('save-admin', { password: adminPassword, dati });
     const verifica = await apiCall('get-admin', { password: adminPassword });
     const salvatoOk = JSON.stringify(verifica.dati[k] && verifica.dati[k][n]) === JSON.stringify(dati[k] && dati[k][n]);
@@ -628,15 +637,6 @@ function renderPassword(){
     $opList.appendChild(row);
   });
 }
-
-const $visAnno = document.getElementById('visAnno'), $visMese = document.getElementById('visMese');
-const $visNome = document.getElementById('visNome'), $visLuogo = document.getElementById('visLuogo');
-const $campoDipendente = document.getElementById('campoDipendente'), $campoLuogo = document.getElementById('campoLuogo');
-const $modoDipendente = document.getElementById('modoDipendente'), $modoLuogo = document.getElementById('modoLuogo');
-const $tabellaRisultati = document.getElementById('tabellaRisultati');
-const $btnScaricaPdf = document.getElementById('btnScaricaPdf'), $btnScaricaPdfLabel = document.getElementById('btnScaricaPdfLabel');
-const $visErrore = document.getElementById('visErrore');
-const $printArea = document.getElementById('printArea');
 
 let modoVis = 'dipendente';
 
